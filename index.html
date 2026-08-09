@@ -1,35 +1,79 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="600">
 <title>모의투자 대시보드</title><style>
-body{font-family:'Malgun Gothic',sans-serif;margin:0;background:#f4f6f9;color:#222}
+body{font-family:'Malgun Gothic',sans-serif;margin:0;background:#f4f6f9;color:#222;line-height:1.55}
 .banner{background:#c0392b;color:#fff;text-align:center;padding:10px;font-weight:bold;font-size:15px}
-.wrap{max-width:480px;margin:0 auto;padding:12px}
-h2{font-size:16px;margin:18px 4px 8px}
+.wrap{max-width:520px;margin:0 auto;padding:12px}
+h2{font-size:17px;margin:22px 4px 8px}
+.hint{color:#667;font-size:13px;margin:0 6px 10px}
 .money{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .big{font-size:30px;font-weight:800}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:14px}
 .grid div{background:#f8f9fb;border-radius:8px;padding:8px}
-.card{background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);font-size:14px;line-height:1.5}
-.row{background:#fff;border-radius:10px;padding:10px;margin-bottom:6px;font-size:14px}
-.tag{background:#eef;color:#336;border-radius:6px;padding:1px 6px;font-size:12px}
-.sub{color:#888;font-size:12px} .up{color:#d32} .dn{color:#16c}
-.foot{color:#999;font-size:11px;text-align:center;margin:20px 0}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;
+      box-shadow:0 1px 3px rgba(0,0,0,.07);font-size:14px}
+.ttl{font-size:16px;margin-bottom:6px}
+.lead{color:#445;margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;border-top:1px solid #f0f2f5;padding:5px 0}
+.kv span{color:#889}
+.note{background:#f7f9fc;border-radius:8px;padding:8px 10px;margin-top:8px;color:#456;font-size:13px}
+.past{color:#8a8f98;font-size:12px;margin-top:8px}
+.tm{color:#889;font-size:13px}
+.tag{background:#eef;color:#336;border-radius:6px;padding:2px 7px;font-size:12px;white-space:nowrap}
+.tag-x{background:#f2f2f2;color:#999}
+.sub{color:#888;font-size:13px} .up{color:#d32} .dn{color:#16c}
+.foot{color:#999;font-size:11px;text-align:center;margin:22px 0}
+.q{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;
+   box-shadow:0 1px 3px rgba(0,0,0,.07);font-size:13px;color:#456}
+.q b{color:#222}
 </style></head><body>
 <div class="banner">⚠️ 모의투자 (가상 자금 시뮬레이션) — 실제 계좌 아님</div>
 <div class="wrap">
-<h2>💰 돈</h2><div class="money">
+
+<div class="q"><b>이게 뭔가요?</b><br>
+자동매매 프로그램이 <b>실제로 내고 있는 매매 신호</b>를 그대로 따라가며,
+가상의 돈 935만원으로 사고팔면 어떻게 되는지 보여주는 화면입니다.
+<b>진짜 돈은 오가지 않습니다.</b><br><br>
+사람이 종목을 고르지 않습니다. 아래 <b>5가지 기법</b>이 각자 정해진 시간에
+정해진 조건을 만족하는 종목이 나타나면 자동으로 사고, 정해진 규칙에 따라 팝니다.
+조건에 맞는 게 없으면 <b>하루 종일 아무것도 안 삽니다.</b></div>
+
+<h2>💰 지금 돈</h2>
+<div class="hint">가상 자금 935만원으로 시작했습니다.</div>
+<div class="money">
 <div class="sub">현재 총자금</div><div class="big">9,350,000원</div>
 <div class="grid">
 <div>오늘 손익<br><b class="up">+0원</b></div>
-<div>누적 손익<br><b class="up">+0원</b></div>
-<div>투입 중<br><b>0원</b></div>
-<div>현금<br><b>9,350,000원</b></div>
+<div>시작 이후 누적<br><b class="up">+0원</b></div>
+<div>주식에 들어가 있는 돈<br><b>0원</b></div>
+<div>남은 현금<br><b>9,350,000원</b></div>
 <div>모의 신용 사용<br><b>0원</b></div>
 <div>모의 신용 한도<br><b>5,610,000원</b></div>
 </div></div>
-<h2>📋 보유 중 (0종목)</h2><div class="card sub">지금 보유 중인 종목이 없습니다.</div>
-<h2>🕐 오늘 매매</h2><div class="row sub">오늘 매매 기록이 없습니다.</div>
+<div class="q" style="margin-top:10px"><b>'모의 신용'이 뭔가요?</b><br>
+가진 돈보다 조금 더 크게 사보는 것을 가정한 계산입니다(빌린 셈 치는 돈).
+여기서는 실제로 빌리지 않고 <b>숫자로만</b> 계산합니다. 빌린 셈 친 돈에는 이자도 붙여서 뺍니다.</div>
+
+<h2>📋 지금 들고 있는 종목 (0개)</h2>
+<div class="hint">산 종목과 얼마에 샀는지, 어떤 기법이 샀는지입니다.</div>
+<div class="card sub">지금 들고 있는 종목이 없습니다. 살 만한 자리가 나올 때까지 기다리는 중입니다 — 안 사는 날도 정상입니다.</div>
+
+<h2>🕐 오늘 사고판 내역</h2>
+<div class="hint">시간 순서대로, 가장 최근 것이 위입니다.</div>
+<div class="card sub">오늘은 아직 사고판 것이 없습니다. 조건에 맞는 종목이 나와야만 삽니다.</div>
+
+<h2>📚 5가지 기법 설명</h2>
+<div class="hint">각 기법이 <b>언제</b> · <b>어떤 종목을</b> · <b>언제까지</b> 들고 있는지입니다.</div>
+<div class="card"><div class="ttl">🎯 <b>판C</b></div><div class="lead">하루 종일 지켜보다가 가장 자주 사는 주력 기법</div><div class="kv"><span>사는 시간</span><b>오전 9시 ~ 오후 3시 20분 (장중 내내)</b></div><div class="note"><b>어떻게 고르나요?</b><br>미리 정해둔 가격선까지 값이 내려오면 그 가격에 사겠다고 예약을 걸어둡니다. 값이 거기까지 안 내려오면 그냥 안 삽니다.</div><div class="note"><b>언제 파나요?</b><br>대개 <b>그날 안에</b> 팝니다. 길어야 며칠입니다.</div><div class="past">지난 기록 · 5거래일 중 2~3일꼴로 신호 · 지난 기록 건당 +4.7% · 10번 중 7번 이익</div></div><div class="card"><div class="ttl">📈 <b>V7</b></div><div class="lead">하루 세 번만 훑어보는 기법</div><div class="kv"><span>사는 시간</span><b>10시 31분 · 12시 1분 · 1시 31분 (딱 세 번)</b></div><div class="note"><b>어떻게 고르나요?</b><br>한동안 눌려 있다가 위로 뚫고 올라가는 종목을 찾습니다. 세 번의 정해진 시각에만 시장을 훑고, 조건에 맞는 게 없으면 그날은 넘어갑니다.</div><div class="note"><b>언제 파나요?</b><br>사면 <b>나흘쯤</b> 들고 갑니다.</div><div class="past">지난 기록 · 20거래일에 하루꼴로 신호 · 지난 기록 건당 +4.4% · 10번 중 5~6번 이익</div></div><div class="card"><div class="ttl">🌅 <b>공1</b></div><div class="lead">개장 직후 30분에만 사는 기법</div><div class="kv"><span>사는 시간</span><b>오전 9시 ~ 9시 30분</b></div><div class="note"><b>어떻게 고르나요?</b><br>장이 열리자마자 30분 동안만 후보를 봅니다. 그 시간이 지나면 아무리 좋아 보여도 안 삽니다.</div><div class="note"><b>언제 파나요?</b><br>사면 <b>사흘쯤</b> 들고 갑니다.</div><div class="past">지난 기록 · 16거래일에 하루꼴로 신호 · 지난 기록 건당 +4.9% · 10번 중 7번 이익</div></div><div class="card"><div class="ttl">🌙 <b>상한기법</b></div><div class="lead">장 끝나기 직전에 사서 다음날 아침에 파는, 하룻밤짜리 기법</div><div class="kv"><span>사는 시간</span><b>오후 3시 ~ 3시 20분 (장 마감 직전)</b></div><div class="note"><b>어떻게 고르나요?</b><br>그날 가격이 가장 크게 오른(상한가) 종목 중에서 고릅니다. 오늘 세게 오른 기세가 다음날 아침까지 이어지는 경우가 많다는 데 거는 것입니다.</div><div class="note"><b>언제 파나요?</b><br><b>다음날 아침 시작가</b>에 바로 팝니다. 딱 하룻밤만 들고 있습니다.</div><div class="past">지난 기록 · 6거래일에 하루꼴로 신호 · 지난 기록 건당 +8.6% · 10번 중 8번 이익</div></div><div class="card"><div class="ttl">🔓 <b>재개일</b></div><div class="lead">거래가 멈췄던 종목이 다시 열리는 첫날 아침에만 사는 기법</div><div class="kv"><span>사는 시간</span><b>오전 9시 ~ 9시 15분</b></div><div class="note"><b>어떻게 고르나요?</b><br>어떤 이유로 사고팔기가 정지됐던 종목이 있습니다. 그게 풀려서 <b>다시 거래되는 첫날</b>, 장 초반에만 삽니다. 눌려 있던 게 한꺼번에 풀리는 자리를 노립니다.</div><div class="note"><b>언제 파나요?</b><br><b>다음날 아침</b>에 팝니다. 단 10% 넘게 빠지면 그 전에 손절합니다.</div><div class="past">지난 기록 · 9거래일에 하루꼴로 신호 · 지난 기록 건당 +10.3% · 10번 중 5번 이익 (<b>크게 벌거나 크게 잃는</b> 편차 큰 기법)</div></div>
+
+<div class="q"><b>알아두면 좋은 말</b><br>
+<b>기법</b> — 종목을 고르는 규칙 한 벌. 사람 대신 프로그램이 이 규칙대로만 판단합니다.<br>
+<b>건당 +4.7%</b> — 한 번 사고팔 때 평균 얼마를 남겼는지. 항상 그렇다는 뜻은 아닙니다.<br>
+<b>손절</b> — 값이 정해진 만큼 빠지면 더 손해 보기 전에 파는 것.<br>
+<b>상한가</b> — 하루에 오를 수 있는 최대치(+30%)까지 오른 상태.<br>
+<b>신호가 없다</b> — 조건에 맞는 종목이 없다는 뜻. 안 사는 것도 규칙의 일부입니다.</div>
+
 <div class="foot">시작자금 935만원 · 모의 신용 60% 포함 운용(유닛 1.6배)<br>
-신호는 실제 자동매매 엔진과 동일 · 장부만 가상 · 10분마다 갱신<br>
-기록 시작 2026-08-10 · 갱신 08/10 00:45</div>
+신호는 실제 자동매매 엔진과 동일 · 장부만 가상 · 10분마다 자동 갱신<br>
+기록 시작 2026-08-10 · 갱신 08/10 01:03</div>
 </div></body></html>
