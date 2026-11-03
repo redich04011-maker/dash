@@ -1,0 +1,34 @@
+{
+  "threshold": 3,
+  "rules": [
+    {"name": "반도체 강세 (SOX +1% 이상)", "points": 2,
+     "when": ["SOX_ret1", ">", 0.01]},
+    {"name": "반도체 약세 (SOX -1% 이하)", "points": -2,
+     "when": ["SOX_ret1", "<", -0.01]},
+
+    {"name": "금리하락 AND 달러약세", "points": 2,
+     "when": {"all": [["TNX_chg1", "<", 0], ["DXY_ret1", "<", 0]]}},
+    {"name": "금리급등 (10년물 +0.08%p 이상)", "points": -2,
+     "when": ["TNX_chg1", ">", 0.08]},
+
+    {"name": "공포완화: VIX -5% OR VIX 15 미만", "points": 1,
+     "when": {"any": [["VIX_pct1", "<", -0.05], ["VIX", "<", 15]]}},
+    {"name": "공포확대: VIX +10% AND VIX 20 이상", "points": -2,
+     "when": {"all": [["VIX_pct1", ">", 0.10], ["VIX", ">", 20]]}},
+
+    {"name": "신용 위험선호 (HYG/IEF 상승 AND 20일선 위)", "points": 1,
+     "when": {"all": [["HY_ret1", ">", 0], ["HY_ma20", ">", 0]]}},
+    {"name": "신용 경색 (HYG/IEF 20일선 -1% 아래)", "points": -2,
+     "when": ["HY_ma20", "<", -0.01]},
+
+    {"name": "위험선호: BTC +3% OR NVDA +2%", "points": 1,
+     "when": {"any": [["BTC_ret1", ">", 0.03], ["NVDA_ret1", ">", 0.02]]}},
+
+    {"name": "추세: 나스닥 20일선 위", "points": 1,
+     "when": ["NDX_ma20", ">", 0]},
+    {"name": "과열: 나스닥 20일선 +6% 이상", "points": -1,
+     "when": ["NDX_ma20", ">", 0.06]},
+    {"name": "과매도 반등: 5일 -5% 이하 AND VIX 하락", "points": 2,
+     "when": {"all": [["NDX_ret5", "<", -0.05], ["VIX_chg1", "<", 0]]}}
+  ]
+}
