@@ -43,6 +43,9 @@ def bls(series):
     return sorted(out)
 
 
+for nm, s_ in (("CPI 발표일", "cpi"), ("PPI 발표일", "ppi"), ("고용지표(NFP)", "empsit")):
+    ev[nm] = bls(s_)
+
 try:  # FOMC
     h = requests.get("https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", headers=UA, timeout=30).text
     fomc = []
