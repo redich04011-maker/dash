@@ -45,7 +45,39 @@ for i, n in enumerate(["월", "화", "수", "목", "금"]):
 df = df.join(cal, how="left").fillna(0)
 df["gap_x_reg"] = df.nq_gap * df.reg
 
+# ---- 보조지표 (전일 일봉까지) ----
+o = yf.download("NQ=F", period="4y", interval="1d", auto_adjust=True, progress=False)
+o.columns = o.columns.get_level_values(0); o.index = pd.to_datetime(o.index).tz_localize(None)
+C, Hh, Ll = o["Close"], o["High"], o["Low"]
+def rsi(x, n):
+    d = x.diff(); u = d.clip(lower=0).ewm(alpha=1/n).mean(); dn = (-d.clip(upper=0)).ewm(alpha=1/n).mean()
+    return 100 - 100 / (1 + u / dn)
+macd = C.ewm(span=12).mean() - C.ewm(span=26).mean()
+bb_m, bb_s = C.rolling(20).mean(), C.rolling(20).std()
+up = (C.diff() > 0).astype(int)
+streak = up.groupby((up != up.shift()).cumsum()).cumcount() + 1
+tr = pd.concat([Hh - Ll, (Hh - C.shift()).abs(), (Ll - C.shift()).abs()], axis=1).max(axis=1)
+T = pd.DataFrame({
+    "t_ret1": C.pct_change(), "t_ret2": C.pct_change(2), "t_ret3": C.pct_change(3),
+    "t_rsi14": rsi(C, 14), "t_rsi2": rsi(C, 2),
+    "t_macdh": (macd - macd.ewm(span=9).mean()) / C,
+    "t_bbpct": (C - bb_m) / (2 * bb_s),
+    "t_stoch": (C - Ll.rolling(14).min()) / (Hh.rolling(14).max() - Ll.rolling(14).min()),
+    "t_streak": np.where(up == 1, streak, -streak),
+    "t_closeloc": (C - Ll) / (Hh - Ll),                      # 전일 종가의 고저 내 위치
+    "t_range_atr": (Hh - Ll) / tr.rolling(14).mean(),
+    "t_hi20": C / Hh.rolling(20).max() - 1, "t_lo20": C / Ll.rolling(20).min() - 1,
+}).shift(1)
+df = df.join(T, how="left").dropna()
+tcols = list(T.columns)
+
 y = (df.yA > 0).values
+print("[보조지표] 오늘 종가방향과 상관 / 밤8시이후(B)와 상관 / 상위·하위 20% 상승비율")
+for c in tcols:
+    q1, q4 = df[c].quantile(.2), df[c].quantile(.8)
+    print(f"  {c:12s} A {np.corrcoef(df[c], df.yA)[0,1]:+.3f}  B {np.corrcoef(df[c], df.yB)[0,1]:+.3f}  "
+          f"하위20% 상승 {(df.yA[df[c]<=q1]>0).mean()*100:4.1f}%  상위20% 상승 {(df.yA[df[c]>=q4]>0).mean()*100:4.1f}%")
+print()
 print(f"{df.index[0].date()} ~ {df.index[-1].date()}  {len(df)}거래일, 전체 상승일 {y.mean()*100:.1f}%\n")
 
 print("[날짜효과] 해당일 상승비율 / 갭방향 적중률")
@@ -72,6 +104,8 @@ sets = {
     "전부": old + ["reg", "gap_x_reg", "p_nvda", "vix_term", "월초3일", "월말2일", "옵션만기",
                   "고용지표일", "휴일전날", "연말연초", "월요일", "화요일", "수요일", "목요일"],
 }
+sets["전부+보조지표"] = sets["전부"] + tcols
+sets["갭+보조지표만"] = ["nq_gap", "reg", "gap_x_reg"] + tcols
 print("\n[모델 비교] 확신구간별 적중률 (walk-forward, 검증 %d일)" % (len(y) - 200))
 bands = [(0.9, 1.01), (0.8, 0.9), (0.7, 0.8), (0.6, 0.7), (0.5, 0.6)]
 print("  모델        전체    " + "  ".join(f"{int(a*100)}~{min(int(b*100),100)}%" for a, b in bands))
