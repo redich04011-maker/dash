@@ -18,7 +18,8 @@ UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/1
 d = df.copy(); d.index = pd.DatetimeIndex(d.date); d["gap"] = gap
 days = list(d.index[-262:])
 CACHE = "headlines.csv"
-cache = pd.read_csv(CACHE, parse_dates=["date"]) if os.path.exists(CACHE) else pd.DataFrame(columns=["date", "q", "title"])
+cache = pd.read_csv(CACHE) if os.path.exists(CACHE) else pd.DataFrame({"date": [], "q": [], "title": []})
+cache["date"] = pd.to_datetime(cache["date"])
 have = set(cache.date.dt.date) if len(cache) else set()
 today = d.index[-1].date()
 
@@ -47,12 +48,21 @@ def fetch(day):
 
 
 new = []
-for day in days:
+
+
+def save():
+    global cache, new
+    if not new: return
+    add = pd.DataFrame(new, columns=["date", "q", "title"]); add["date"] = pd.to_datetime(add["date"])
+    cache = pd.concat([cache[cache.date.dt.date != today], add]).drop_duplicates(["date", "title"])
+    cache.to_csv(CACHE, index=False); new = []
+
+
+for n, day in enumerate(days):
     if day.date() in have and day.date() != today: continue
     new += fetch(day)
-if new:
-    cache = pd.concat([cache[cache.date.dt.date != today], pd.DataFrame(new, columns=["date", "q", "title"])])
-    cache = cache.drop_duplicates(["date", "title"]); cache.to_csv(CACHE, index=False)
+    if n % 20 == 0: save(); print(f"  수집 {n+1}/{len(days)}일", flush=True)
+save()
 txt = cache.groupby(cache.date.dt.normalize()).title.apply(lambda s: " . ".join(s)).reindex(days).fillna("")
 cnt = cache.groupby(cache.date.dt.normalize()).size().reindex(days).fillna(0)
 print(f"헤드라인 {len(cache)}개, {len(days)}일, 하루 평균 {cnt.mean():.0f}개 (최소 {cnt.min():.0f})\n")
