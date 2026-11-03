@@ -20,21 +20,28 @@ d["A"] = d.post.apply(lambda a: a[-1]); d["B"] = (1 + d.A) / (1 + d.gap) - 1
 ev = {}
 
 
+FRED_RID = {"cpi": 10, "ppi": 46, "empsit": 50}
+
+
 def bls(series):
+    out = set()
     try:
-        h = requests.get(f"https://www.bls.gov/bls/news-release/{series}.htm", headers=UA, timeout=30).text
-        out = {pd.Timestamp(f"{m[4:]}-{m[:2]}-{m[2:4]}") for m in re.findall(rf"{series}_(\d{{8}})\.htm", h)}
-        h2 = requests.get(f"https://www.bls.gov/schedule/news_release/{series}.htm", headers=UA, timeout=30).text
-        for s in re.findall(r"([A-Z][a-z]{2})\.? (\d{1,2}), (20\d\d)", h2):
-            try: out.add(pd.Timestamp(f"{s[0]} {s[1]} {s[2]}"))
-            except Exception: pass
-        return sorted(out)
+        r = requests.get(f"https://www.bls.gov/bls/news-release/{series}.htm", headers=UA, timeout=30)
+        out |= {pd.Timestamp(f"{m[4:]}-{m[:2]}-{m[2:4]}") for m in re.findall(rf"{series}_(\d{{8}})\.htm", r.text)}
+        print(f"  BLS {series}: HTTP {r.status_code}, {len(out)}건")
     except Exception as e:
-        print(f"  ! {series} 일정 수집 실패: {e}"); return []
+        print(f"  ! BLS {series} 실패: {e}")
+    if not out:  # FRED 발표일정 대체
+        for y in (2024, 2025, 2026):
+            try:
+                r = requests.get(f"https://fred.stlouisfed.org/releases/calendar?rid={FRED_RID[series]}&y={y}", headers=UA, timeout=30)
+                for mo, dd, yy in re.findall(r"(January|February|March|April|May|June|July|August|September|October|November|December) (\d{1,2}), (20\d\d)", r.text):
+                    if int(yy) == y: out.add(pd.Timestamp(f"{mo} {dd} {yy}"))
+                print(f"  FRED {series} {y}: HTTP {r.status_code}, 누적 {len(out)}건")
+            except Exception as e:
+                print(f"  ! FRED {series} {y} 실패: {e}")
+    return sorted(out)
 
-
-for nm, s in (("CPI 발표일", "cpi"), ("PPI 발표일", "ppi"), ("고용지표(NFP)", "empsit")):
-    ev[nm] = bls(s)
 
 try:  # FOMC
     h = requests.get("https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", headers=UA, timeout=30).text
