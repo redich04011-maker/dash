@@ -12,8 +12,8 @@ nq = dl["NQ=F"]
 ma20, ma60 = nq.rolling(20).mean(), nq.rolling(60).mean()
 sl = ma20.pct_change(5)
 reg = pd.Series(0, index=nq.index)
-reg[(nq > ma20) & (ma20 > ma60) & (sl > 0)] = 1
-reg[(nq < ma20) & (ma20 < ma60) & (sl < 0)] = -1
+reg[(nq > ma20) & (sl > 0)] = 1
+reg[(nq < ma20) & (sl < 0)] = -1
 extra = pd.DataFrame({
     "reg": reg, "p_nvda": dl["NVDA"].pct_change(),
     "vix_term": dl["^VIX"] / dl["^VIX3M"],              # >1 이면 단기공포 역전

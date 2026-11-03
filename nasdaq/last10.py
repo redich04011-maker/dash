@@ -10,8 +10,8 @@ nq = yf.download("NQ=F", period="4y", interval="1d", auto_adjust=True, progress=
 nq.index = pd.to_datetime(nq.index).tz_localize(None)
 ma20, ma60 = nq.rolling(20).mean(), nq.rolling(60).mean(); sl = ma20.pct_change(5)
 reg = pd.Series(0, index=nq.index)
-reg[(nq > ma20) & (ma20 > ma60) & (sl > 0)] = 1
-reg[(nq < ma20) & (ma20 < ma60) & (sl < 0)] = -1
+reg[(nq > ma20) & (sl > 0)] = 1
+reg[(nq < ma20) & (sl < 0)] = -1
 df = build(); df.index = pd.to_datetime(df.index)
 df["reg"] = reg.shift(1).reindex(df.index); df = df.dropna()
 df["gap_x_reg"] = df.nq_gap * df.reg

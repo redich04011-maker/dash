@@ -1,7 +1,7 @@
 """추세(일봉)별 상/하 적중률: 상승세 / 하락세 / 횡보세
 추세 판정은 전일 종가까지의 일봉만 사용:
-  상승세: 종가 > MA20 > MA60 AND MA20 5일 기울기 > 0
-  하락세: 종가 < MA20 < MA60 AND MA20 5일 기울기 < 0
+  상승세: 종가 > MA20 AND MA20 5일 기울기 > 0
+  하락세: 종가 < MA20 AND MA20 5일 기울기 < 0
   횡보세: 그 외
 """
 import numpy as np, pandas as pd, yfinance as yf
@@ -15,8 +15,8 @@ d.index = pd.to_datetime(d.index).tz_localize(None)
 ma20, ma60 = d.rolling(20).mean(), d.rolling(60).mean()
 slope = ma20.pct_change(5)
 reg = pd.Series("횡보세", index=d.index)
-reg[(d > ma20) & (ma20 > ma60) & (slope > 0)] = "상승세"
-reg[(d < ma20) & (ma20 < ma60) & (slope < 0)] = "하락세"
+reg[(d > ma20) & (slope > 0)] = "상승세"
+reg[(d < ma20) & (slope < 0)] = "하락세"
 reg = reg.shift(1)  # 전일까지 정보로 오늘 추세 판정
 
 df = build()
