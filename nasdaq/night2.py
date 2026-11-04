@@ -9,7 +9,18 @@ import numpy as np, pandas as pd, requests, yfinance as yf
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from pattern import df, gap, nq, asof, ET
+from pattern import df, gap, nq, ET
+import sys
+
+
+def asof(s, ts):
+    """ts 시점까지 완성된 1시간봉 종가 (빠른 버전)"""
+    i = s.index.searchsorted(ts - pd.Timedelta(hours=1), side="right") - 1
+    return s.iloc[i] if i >= 0 else np.nan
+
+
+def log(*a):
+    print(*a, flush=True)
 from night import build
 
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
@@ -82,11 +93,14 @@ def econ(dates):
     keys = {"CPI": ["CPI", "Consumer Price Index"], "PPI": ["PPI", "Producer Price"], "NFP": ["Nonfarm Payrolls", "Non-Farm"],
             "FOMC": ["Fed Interest Rate Decision", "FOMC Statement", "Interest Rate Decision"], "PCE": ["PCE"], "GDP": ["GDP"],
             "소매": ["Retail Sales"]}
-    ok = 0
-    for d in dates:
+    ok = fail = 0
+    for n, d in enumerate(dates):
+        if n == 12 and ok == 0:
+            log("  ! 경제달력 접속 불가 → 일정 없이 진행"); return {x: None for x in dates}
+        if n % 100 == 0: log(f"  경제달력 {n}/{len(dates)}")
         try:
             r = requests.get("https://api.nasdaq.com/api/calendar/economicevents", params={"date": d.strftime("%Y-%m-%d")},
-                             headers=UA, timeout=15)
+                             headers=UA, timeout=8)
             rows = (r.json().get("data") or {}).get("rows") or []
             ok += 1
             tags = set()
@@ -104,7 +118,7 @@ def econ(dates):
 
 
 # ================= 1) 나스닥 밤 표본 (전체 미국 거래일) =================
-rows = []
+log("나스닥 밤 표본 계산"); rows = []
 for d in usd[-500:]:
     f = feat_at(d)
     if not f: continue
@@ -113,7 +127,7 @@ for d in usd[-500:]:
     f["r2"] = night_ret(d, nx[0]); rows.append(f)
 N = pd.DataFrame(rows).set_index("d")
 N = N[N.r2.notna()]
-cal = econ(list(N.index))
+log("경제달력 수집"); cal = econ(list(N.index))
 for k in ("CPI", "PPI", "NFP", "FOMC", "PCE", "GDP", "소매"):
     N[f"ev_{k}"] = [int(k in (cal.get(d) or set())) for d in N.index]
 N["ev_macro"] = N[["ev_CPI", "ev_PPI", "ev_NFP", "ev_FOMC", "ev_PCE"]].max(1)
@@ -128,7 +142,7 @@ for _, x in O.iterrows():
     f = feat_at(x.d)
     if not f: continue
     f.update(r2=night_ret(x.d, x.d2), pnl=x["우리_08시_판당"], winr=x["이김비율"], 판수=x["판수"], 기간=x["기간"])
-    ev = cal.get(x.d) if x.d in cal else econ([x.d]).get(x.d)
+    ev = cal.get(x.d)
     for k in ("CPI", "PPI", "NFP", "FOMC", "PCE"):
         f[f"ev_{k}"] = int(k in (ev or set()))
     f["ev_macro"] = max(f[f"ev_{k}"] for k in ("CPI", "PPI", "NFP", "FOMC", "PCE"))
