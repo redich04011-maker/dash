@@ -136,11 +136,27 @@ log(f"  {time.time()-T0:.0f}초 경과 / 경제달력 수집")
 ud = [d for d in pd.to_datetime(pd.read_csv("in/NIGHTS_시간외_우리성과_밤별.csv", dtype={"d": str}).d)]
 if SAMPLE < 1: ud = sorted(rng.choice(ud, int(len(ud) * SAMPLE), replace=False))
 alld = sorted(set(N.index) | set(ud))
-t1 = time.time(); probe = econ(alld[:20]); per = (time.time() - t1) / 20
+if os.environ.get("ECON", "1") == "0": alld_probe = []
+t1 = time.time(); probe = econ(alld[:20]) if os.environ.get("ECON", "1") != "0" else {}; per = (time.time() - t1) / 20
 okp = sum(v is not None for v in probe.values())
 log(f"  경제달력 시험 20일: 수신 {okp}/20, 1건당 {per:.1f}초")
 cal = econ(alld[20:]) if (okp >= 15 and per < 2) else {d: None for d in alld[20:]}
 cal.update(probe)
+# FOMC는 연준 일정표(빠름)로 보강
+import re as _re
+try:
+    h = requests.get("https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", headers=UA, timeout=30).text
+    fom = set()
+    for yr, body in _re.findall(r"(20\d\d) FOMC Meetings(.*?)(?=20\d\d FOMC Meetings|$)", h, _re.S):
+        for mon_, day_ in _re.findall(r'fomc-meeting__month[^>]*>\s*<strong>([A-Za-z/]+)</strong>.*?fomc-meeting__date[^>]*>([\d\-\*\s]+)<', body, _re.S):
+            try: fom.add(pd.Timestamp(f"{mon_.split('/')[-1][:3]} {_re.findall(r'[0-9]+', day_)[-1]} {yr}"))
+            except Exception: pass
+    for d in alld:
+        if d in fom: cal[d] = (cal.get(d) or set()) | {"FOMC"}
+        elif cal.get(d) is None: cal[d] = set()
+    log(f"  FOMC 일정 {len(fom)}건 반영")
+except Exception as e:
+    log("  ! FOMC 실패", e)
 log(f"  {time.time()-T0:.0f}초 경과")
 for k in ("CPI", "PPI", "NFP", "FOMC", "PCE", "GDP", "소매"):
     N[f"ev_{k}"] = [int(k in (cal.get(d) or set())) for d in N.index]
