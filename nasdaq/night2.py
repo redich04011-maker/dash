@@ -26,6 +26,9 @@ from night import build
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
       "Accept": "application/json, text/plain, */*"}
 rng = np.random.default_rng(0)
+import os
+SAMPLE = float(os.environ.get("SAMPLE", "0.3"))   # 0.3 = 30% 표본 시험, 1 = 전체
+T0 = time.time()
 
 # ---------------- 미국 거래일 표, 기본 지표 ----------------
 base = df.copy(); base.index = pd.DatetimeIndex(base.date); base["gap"] = gap
@@ -118,8 +121,10 @@ def econ(dates):
 
 
 # ================= 1) 나스닥 밤 표본 (전체 미국 거래일) =================
-log("나스닥 밤 표본 계산"); rows = []
-for d in usd[-500:]:
+pool = usd[-500:]
+if SAMPLE < 1: pool = sorted(rng.choice(pool, int(len(pool) * SAMPLE), replace=False))
+log(f"[표본 {SAMPLE:.0%}] 나스닥 밤 {len(pool)}일 계산"); rows = []
+for d in pool:
     f = feat_at(d)
     if not f: continue
     nx = [x for x in usd if x > d]
@@ -127,7 +132,11 @@ for d in usd[-500:]:
     f["r2"] = night_ret(d, nx[0]); rows.append(f)
 N = pd.DataFrame(rows).set_index("d")
 N = N[N.r2.notna()]
-log("경제달력 수집"); cal = econ(list(N.index))
+log(f"  {time.time()-T0:.0f}초 경과 / 경제달력 수집")
+ud = [d for d in pd.to_datetime(pd.read_csv("in/NIGHTS_시간외_우리성과_밤별.csv", dtype={"d": str}).d)]
+if SAMPLE < 1: ud = sorted(rng.choice(ud, int(len(ud) * SAMPLE), replace=False))
+cal = econ(sorted(set(N.index) | set(ud)))
+log(f"  {time.time()-T0:.0f}초 경과")
 for k in ("CPI", "PPI", "NFP", "FOMC", "PCE", "GDP", "소매"):
     N[f"ev_{k}"] = [int(k in (cal.get(d) or set())) for d in N.index]
 N["ev_macro"] = N[["ev_CPI", "ev_PPI", "ev_NFP", "ev_FOMC", "ev_PCE"]].max(1)
@@ -137,6 +146,7 @@ N.to_csv("night_features.csv")
 # ================= 2) 우리 성과 212밤 =================
 O = pd.read_csv("in/NIGHTS_시간외_우리성과_밤별.csv", dtype={"d": str, "d2": str})
 O["d"] = pd.to_datetime(O.d); O["d2"] = pd.to_datetime(O.d2)
+if SAMPLE < 1: O = O[O.d.isin(ud)]
 orow = []
 for _, x in O.iterrows():
     f = feat_at(x.d)
@@ -188,7 +198,7 @@ def sweep(X, y, metric, title, higher_better=True, min_n=30):
     # 뒤섞기: 앞절반에서 최고값이 우연으로 얼마나 나오나
     sh = []
     yA = y[A]
-    for _ in range(200):
+    for _ in range(100 if SAMPLE < 1 else 200):
         yp = rng.permutation(yA); bests = []
         for nm, f, qi, m, sa in out[:400]:
             mm = m[A]
@@ -221,12 +231,13 @@ sweep(N[FEATS + EV], np.abs(N.r2.values), np.mean, "1-C |②| 평균(%)")
 # ② 방향 (참고)
 sweep(N[FEATS + EV], (N.r2.values > 0).astype(float), np.mean, "② 상승 비율(%)")
 
+log(f"  {time.time()-T0:.0f}초 경과 / 모델")
 # ================= 4) 모델(walk-forward) + 날짜별 예측 csv =================
 F2 = [f for f in FEATS + EV if f in N and N[f].isna().mean() < .3]
 Xn = N[F2].fillna(N[F2].median()).values
 yb = (N.r2.values <= -.007).astype(int); ya = np.abs(N.r2.values); yu = (N.r2.values > 0).astype(int)
 Pb, Pa, Pu = (np.full(len(N), np.nan) for _ in range(3))
-for s in range(200, len(N), 20):
+for s in range(int(len(N) * .4), len(N), 20):
     Pb[s:s+20] = make_pipeline(StandardScaler(), LogisticRegression(C=.1, max_iter=3000)).fit(Xn[:s], yb[:s]).predict_proba(Xn[s:s+20])[:, 1]
     Pu[s:s+20] = make_pipeline(StandardScaler(), LogisticRegression(C=.1, max_iter=3000)).fit(Xn[:s], yu[:s]).predict_proba(Xn[s:s+20])[:, 1]
     Pa[s:s+20] = make_pipeline(StandardScaler(), Ridge(alpha=30)).fit(Xn[:s], ya[:s]).predict(Xn[s:s+20])
