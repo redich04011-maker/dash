@@ -191,7 +191,7 @@ def sweep(X, y, metric, title, higher_better=True, min_n=30):
         if f in X: res.append((f"{f}=1", f, -1, X[f].values == 1))
     out = []
     for nm, f, qi, m in res:
-        if m[A].sum() < 15: continue
+        if m[A].sum() < (8 if SAMPLE < 1 else 15): continue
         sa = metric(y[m & A]); out.append((nm, f, qi, m, sa))
     out.sort(key=lambda t: -(t[4] if higher_better else -t[4]))
     best_a = out[0][4] if out else np.nan
@@ -202,7 +202,7 @@ def sweep(X, y, metric, title, higher_better=True, min_n=30):
         yp = rng.permutation(yA); bests = []
         for nm, f, qi, m, sa in out[:400]:
             mm = m[A]
-            if mm.sum() >= 15: bests.append(metric(yp[mm]))
+            if mm.sum() >= (8 if SAMPLE < 1 else 15): bests.append(metric(yp[mm]))
         sh.append(max(bests) if higher_better else min(bests))
     p = np.mean([s >= best_a if higher_better else s <= best_a for s in sh])
     print(f"\n[{title}] 전체 기준 {base_all*100:.1f} / 앞절반 기준 {metric(y[A])*100:.1f} / 뒤 {metric(y[B])*100:.1f} / 애프터 {metric(y[C])*100:.1f}")
