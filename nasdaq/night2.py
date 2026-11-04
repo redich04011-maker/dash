@@ -135,7 +135,12 @@ N = N[N.r2.notna()]
 log(f"  {time.time()-T0:.0f}초 경과 / 경제달력 수집")
 ud = [d for d in pd.to_datetime(pd.read_csv("in/NIGHTS_시간외_우리성과_밤별.csv", dtype={"d": str}).d)]
 if SAMPLE < 1: ud = sorted(rng.choice(ud, int(len(ud) * SAMPLE), replace=False))
-cal = econ(sorted(set(N.index) | set(ud)))
+alld = sorted(set(N.index) | set(ud))
+t1 = time.time(); probe = econ(alld[:20]); per = (time.time() - t1) / 20
+okp = sum(v is not None for v in probe.values())
+log(f"  경제달력 시험 20일: 수신 {okp}/20, 1건당 {per:.1f}초")
+cal = econ(alld[20:]) if (okp >= 15 and per < 2) else {d: None for d in alld[20:]}
+cal.update(probe)
 log(f"  {time.time()-T0:.0f}초 경과")
 for k in ("CPI", "PPI", "NFP", "FOMC", "PCE", "GDP", "소매"):
     N[f"ev_{k}"] = [int(k in (cal.get(d) or set())) for d in N.index]
