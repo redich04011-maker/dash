@@ -1,0 +1,24 @@
+name: nasdaq-night
+on:
+  push:
+    branches: [ccr-4dc2bcfa-19dlf6]
+    paths: ["nasdaq/**", ".github/workflows/nasdaq-night.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: sudo apt-get install -y -q fonts-nanum >/dev/null && rm -rf ~/.cache/matplotlib
+      - run: pip install -q yfinance pandas scikit-learn matplotlib lxml requests scipy
+      - run: cd nasdaq && python firstsurge.py
+      - name: commit chart
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add nasdaq/*.png nasdaq/*.csv nasdaq/exchange
+          git commit -m "Update pattern chart [skip ci]" && (git pull --rebase -q && git push) || true
